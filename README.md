@@ -127,3 +127,45 @@ Project layout
 License
 
 - MIT (or adapt as needed)
+
+
+
+Before you begin
+
+- Make sure you are inside the repository directory (the one that contains Dockerfile) before building or running with Docker:
+  cd /path/to/ntripcaster2
+
+Quick run (single line)
+
+- If you prefer a single command you can paste directly to start the container after building the image:
+  docker run -it --rm -p 8000:8000 -p 2101:2101 -v $(pwd)/ntripcaster.db:/app/ntripcaster.db --name ntripcaster ntripcaster:latest
+
+Troubleshooting
+
+- Error: failed to read dockerfile: open Dockerfile: no such file or directory
+  Cause: You executed docker build in a directory that doesn’t contain the project’s Dockerfile.
+  Fix: cd into the repository directory first (where Dockerfile is), then run:
+    cd /path/to/ntripcaster2
+    docker build -t ntripcaster:latest .
+
+- Error: docker run requires at least 1 argument, and/or each -p/-v line is treated as a separate shell command (-p: command not found)
+  Cause: You split the docker run command across multiple lines without using trailing backslashes, so the shell interprets each line as a separate command.
+  Fix A (recommended): Use the single-line command above.
+  Fix B (multi-line): Ensure each line ends with a backslash (\) like this:
+    docker run -it --rm \
+      -p 8000:8000 \
+      -p 2101:2101 \
+      -v $(pwd)/ntripcaster.db:/app/ntripcaster.db \
+      --name ntripcaster \
+      ntripcaster:latest
+
+- Raw TCP sources on dedicated ports
+  If you create mountpoints with source protocol TCP/IP (raw), you must also publish those ports when running the container, e.g.:
+    -p 5001:5001 -p 5002:5002
+  On Linux you can instead use host networking to avoid publishing many ports:
+    --network host
+
+- Resetting the database on next start
+  By default, the app keeps your existing ntripcaster.db. To force a one-time reset (with a timestamped backup), set the environment variable when running:
+    docker run -it --rm -e NTRIP_OVERWRITE_DB=true -p 8000:8000 -p 2101:2101 -v $(pwd)/ntripcaster.db:/app/ntripcaster.db --name ntripcaster ntripcaster:latest
+  In docker-compose.yml, temporarily set NTRIP_OVERWRITE_DB: "true" and restart once.
