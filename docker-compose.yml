@@ -2,8 +2,10 @@ version: "3.9"
 
 services:
   ntripcaster:
-    build: .
-    image: ntripcaster:latest
+    # Use prebuilt image published to GitHub Container Registry
+    image: ghcr.io/kroegman/ntripcaster2:latest
+    # For local development, you can uncomment the next line to build locally instead of pulling:
+    # build: .
     container_name: ntripcaster
     restart: unless-stopped
     environment:

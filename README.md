@@ -14,6 +14,21 @@ Note: This is a minimal, single-process implementation suitable for demos/dev on
 
 Getting started
 
+One-click install on a fresh remote server (Ubuntu/Debian)
+
+- This command installs Docker if missing, pulls the prebuilt image from GHCR, and runs the service with ports 8000 and 2101. You can customize ports and other options via env vars.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kroegman/ntripcaster2/main/scripts/install.sh | bash
+```
+
+Optional overrides (example):
+
+```bash
+HTTP_PORT=8080 NTRIP_PORT=2201 OVERWRITE_DB=true \
+  bash -c "$(curl -fsSL https://raw.githubusercontent.com/kroegman/ntripcaster2/main/scripts/install.sh)"
+```
+
 Option A: Docker (recommended)
 
 1) Build the image:
@@ -38,7 +53,18 @@ docker run -it --rm \
 - If you plan to use TCP/IP raw sources on dedicated ports (e.g., 5001), also publish those ports with additional -p flags, e.g. `-p 5001:5001`.
 - On Linux, you can alternatively use host networking to avoid publishing many ports: `--network host`
 
-3) Or use Docker Compose:
+3) Run with the published image (no local build):
+
+```bash
+docker run -it --rm \
+  -p 8000:8000 \
+  -p 2101:2101 \
+  -v $(pwd)/ntripcaster.db:/app/ntripcaster.db \
+  --name ntripcaster \
+  ghcr.io/kroegman/ntripcaster2:latest
+```
+
+4) Or use Docker Compose (pulls the image automatically):
 
 ```bash
 docker compose up -d
@@ -232,3 +258,18 @@ docker run -it --rm -e NTRIP_OVERWRITE_DB=true -p 8000:8000 -p 2101:2101 -v $(pw
 ```
 
   In docker-compose.yml, temporarily set `NTRIP_OVERWRITE_DB: "true"` and restart once.
+
+### CI/CD (Container Image Publishing)
+
+- This repository publishes multi-arch Docker images (linux/amd64, linux/arm64) to GitHub Container Registry on every push to the default branch and on tags.
+- Image reference: `ghcr.io/kroegman/ntripcaster2:latest` (or a specific tag/SHA created by the workflow).
+- You can use Docker Compose (included) or the one-click installer to pull and run this image directly without a local build.
+
+Workflow summary:
+- Triggers: push to main/master, tags, or manual dispatch.
+- Uses Buildx with QEMU to build multi-arch images.
+- Authenticates to GHCR using the built-in GITHUB_TOKEN with packages:write permission.
+
+If you fork the repo:
+- The workflow should work without extra secrets; ensure Actions permissions allow packages: write for the repository.
+- Your image path will be `ghcr.io/<your-github-username-or-org>/ntripcaster2`.
