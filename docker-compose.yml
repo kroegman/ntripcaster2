@@ -6,6 +6,10 @@ services:
     image: ntripcaster:latest
     container_name: ntripcaster
     restart: unless-stopped
+    environment:
+      # If you want to overwrite/reset the DB on next start, set to "true" temporarily.
+      # The existing DB will be backed up to ntripcaster.db.bak-YYYYMMDDHHMMSS.
+      - NTRIP_OVERWRITE_DB=false
     ports:
       - "8000:8000"   # Admin UI
       - "2101:2101"   # NTRIP caster
