@@ -1,0 +1,17 @@
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;margin:0;padding:0;background:#f6f7fb;color:#222}
+header{background:#0b5ea8;color:#fff;padding:16px 24px}
+main{padding:24px;display:grid;gap:24px}
+.panel{background:#fff;border:1px solid #e1e5ee;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04);padding:16px}
+h1{margin:0}
+h2{margin:0 0 12px 0}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:8px;margin-bottom:12px}
+.grid select,.grid input,.grid button{padding:8px;border:1px solid #d6dbe6;border-radius:6px}
+.grid button{background:#0b5ea8;color:#fff;border:none;cursor:pointer}
+.grid button:hover{background:#094f8c}
+
+ table{width:100%;border-collapse:collapse}
+ th,td{padding:8px;border-bottom:1px solid #eef1f6;text-align:left}
+ th{background:#fafbfe}
+ .status{padding:2px 8px;border-radius:999px;font-size:12px}
+ .online{background:#e6f7ed;color:#117a3d}
+ .offline{background:#fdeaea;color:#b42318}

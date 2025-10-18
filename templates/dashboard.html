@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NTRIP Caster Admin</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>NTRIP Caster Admin</h1>
+  </header>
+  <main>
+    <section class="panel">
+      <h2>Users</h2>
+      <form method="post" action="/users" class="grid">
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <input type="number" name="connection_limit" placeholder="Connection limit" value="5" min="1">
+        <button type="submit">Create User</button>
+      </form>
+      <table>
+        <thead><tr><th>ID</th><th>Username</th><th>Conn limit</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>{{ u.id }}</td>
+            <td>{{ u.username }}</td>
+            <td>{{ u.connection_limit }}</td>
+            <td>
+              <form method="post" action="/users/{{u.id}}/delete" onsubmit="return confirm('Delete user?')">
+                <button type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>Mountpoints</h2>
+      <form method="post" action="/mountpoints" class="grid">
+        <select name="owner_id" required>
+          <option value="">Owner...</option>
+          {% for u in users %}
+            <option value="{{u.id}}">{{u.username}}</option>
+          {% endfor %}
+        </select>
+        <input type="text" name="name" placeholder="Mountpoint name" required>
+        <input type="text" name="description" placeholder="Description">
+        <input type="text" name="source_username" placeholder="Source username" required>
+        <input type="text" name="source_password" placeholder="Source password" required>
+        <select name="source_protocol" id="source_protocol">
+          <option value="ntrip">NTRIP (auto v1/v2)</option>
+          <option value="tcp_raw">TCP/IP (raw)</option>
+        </select>
+        <input type="number" name="tcp_port" id="tcp_port" placeholder="TCP port (for TCP/IP)" style="display:none;">
+        <input type="number" step="any" name="latitude" placeholder="Latitude">
+        <input type="number" step="any" name="longitude" placeholder="Longitude">
+        <button type="submit">Create Mountpoint</button>
+      </form>
+      <script>
+        const protoSel = document.getElementById('source_protocol');
+        const tcpPort = document.getElementById('tcp_port');
+        function togglePort(){ tcpPort.style.display = (protoSel.value === 'tcp_raw') ? '' : 'none'; }
+        protoSel.addEventListener('change', togglePort);
+        togglePort();
+      </script>
+      <table>
+        <thead><tr><th>ID</th><th>Name</th><th>Protocol</th><th>Source user</th><th>Online</th><th>Last data</th><th>Lat</th><th>Lon</th><th>Owner</th><th>Source setup</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for mp in mountpoints %}
+          <tr>
+            <td>{{ mp.id }}</td>
+            <td>{{ mp.name }}</td>
+            <td>{{ 'ntrip' if mp.source_protocol in ['ntrip','ntrip_v1','ntrip_v2'] else mp.source_protocol }}</td>
+            <td>{{ mp.source_username }}</td>
+            <td>
+              {% if mp.online %}
+                <span class="status online">Online</span>
+              {% else %}
+                <span class="status offline">Offline</span>
+              {% endif %}
+            </td>
+            <td>{{ mp.last_data_at }}</td>
+            <td>{{ mp.latitude }}</td>
+            <td>{{ mp.longitude }}</td>
+            <td>{{ mp.owner.username if mp.owner else '' }}</td>
+            <td>
+              {% set host = request.url.hostname %}
+              {% set admin_port = request.url.port %}
+              {% set caster_port = 2101 %}
+              {% if mp.source_protocol in ['ntrip','ntrip_v1','ntrip_v2'] %}
+                <div>
+                  <div><strong>NTRIP v1:</strong> First line: <code>SOURCE {{ mp.source_password }} /{{ mp.name }}</code></div>
+                  <div><strong>NTRIP v2:</strong> <code>POST /{{ mp.name }} HTTP/1.1</code>; Header <code>Ntrip-Version: Ntrip/2.0</code>; <code>Authorization: Basic {{ (mp.source_username ~ ':' ~ mp.source_password)|b64encode if false }}</code> (use {{ mp.source_username }} / {{ mp.source_password }})</div>
+                  <div>Server: <code>{{ host }}:{{ caster_port }}</code></div>
+                </div>
+              {% elif mp.source_protocol == 'tcp_raw' %}
+                <div>
+                  <div>Connect TCP to <code>{{ host }}:{{ mp.tcp_port }}</code></div>
+                  <div>Send preface: <code>AUTH {{ mp.source_username }}:{{ mp.source_password }} {{ mp.name }}\r\n</code>, then stream RTCM bytes.</div>
+                </div>
+              {% endif %}
+            </td>
+            <td>
+              <form method="post" action="/mountpoints/{{mp.id}}/delete" onsubmit="return confirm('Delete mountpoint?')">
+                <button type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>Nearest Base Mountpoint</h2>
+      <p>Clients can connect to mountpoint name NEAREST with Basic auth using any existing mountpoint credentials; the caster will auto-route to the nearest online base after receiving GGA.</p>
+      <pre><code>GET /NEAREST HTTP/1.0\r\nAuthorization: Basic base64(username:password)\r\n\r\n</code></pre>
+    </section>
+  </main>
+</body>
+</html>

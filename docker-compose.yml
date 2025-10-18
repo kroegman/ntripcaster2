@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  ntripcaster:
+    build: .
+    image: ntripcaster:latest
+    container_name: ntripcaster
+    restart: unless-stopped
+    ports:
+      - "8000:8000"   # Admin UI
+      - "2101:2101"   # NTRIP caster
+      # To use TCP/IP raw sources on dedicated ports, also publish those ports, e.g.:
+      # - "5001:5001"
+      # - "5002:5002"
+    volumes:
+      # Persist the SQLite DB on the host
+      - ./ntripcaster.db:/app/ntripcaster.db
+    # On Linux, you may prefer host networking to avoid publishing many raw ports:
+    # network_mode: host
