@@ -171,6 +171,23 @@ docker run -it --rm -p 8000:8000 -p 2101:2101 -v $(pwd)/ntripcaster.db:/app/ntri
 
 Troubleshooting
 
+- Error: Unable to find image 'ntripcaster:latest' locally / pull access denied
+  Cause: You tried to run the container before building the image locally (there is no public registry image for this tag).
+  Fix A (build then run):
+
+```bash
+cd /path/to/ntripcaster2
+docker build -t ntripcaster:latest .
+docker run -it --rm -p 8000:8000 -p 2101:2101 -v $(pwd)/ntripcaster.db:/app/ntripcaster.db --name ntripcaster ntripcaster:latest
+```
+
+  Fix B (Compose, builds automatically):
+
+```bash
+cd /path/to/ntripcaster2
+docker compose up --build -d
+```
+
 - Error: failed to read dockerfile: open Dockerfile: no such file or directory
   Cause: You executed docker build in a directory that doesn’t contain the project’s Dockerfile.
   Fix: cd into the repository directory first (where Dockerfile is), then run:
